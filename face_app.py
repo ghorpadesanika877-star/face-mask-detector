@@ -7,18 +7,19 @@ from streamlit_cropper import st_cropper
 
 st.title("Face Mask Detection Project")
 
-# मॉडेल लोड करण्यासाठी साधे फंक्शन
 @st.cache_resource
 def load_face_model():
     return load_model("face-mask-detector.keras")
 
 model = load_face_model()
 
-# इमेज इनपुटचे पर्याय
+
+if "cropped_image_data" not in st.session_state:
+    st.session_state.cropped_image_data = None
+
 option = st.selectbox("Select", ["Image", "Capture"])
 uploaded_file = None
 camera_image = None
-image_to_detect = None
 
 if option == "Image":
     uploaded_file = st.file_uploader("Upload image", type=["jpg", "jpeg", "png"])
@@ -31,8 +32,8 @@ if option == "Image":
             box_color='red',
             aspect_ratio=(1, 1)
         )
-        image_to_detect = cropped_img.resize((150, 150))
-        st.image(image_to_detect, caption="Processed Image")
+        st.session_state.cropped_image_data = cropped_img.resize((150, 150))
+        st.image(st.session_state.cropped_image_data, caption="Processed Image")
 else:
     camera_image = st.camera_input("Capture a photo")
     if camera_image:
@@ -44,26 +45,30 @@ else:
             box_color='red',
             aspect_ratio=(1, 1)
         )
-        image_to_detect = cropped_img.resize((150, 150))
-        st.image(image_to_detect, caption="Processed Image")
+        st.session_state.cropped_image_data = cropped_img.resize((150, 150))
+        st.image(st.session_state.cropped_image_data, caption="Processed Image")
 
 
 if st.button("Detect"):
+    image_to_detect = st.session_state.cropped_image_data
+    
     if image_to_detect is not None:     
-      
+    
         image_to_detect = image_to_detect.convert("RGB") 
-        img_array = np.array(image_to_detect, dtype=np.float32) / 255.0
-        img_array = np.expand_dims(img_array, axis=0)
+        img_array = np.array(image_to_detect, dtype=np.float32)
         
+        
+        img_array = (img_array / 127.5) - 1.0
+        img_array = np.expand_dims(img_array, axis=0)
 
         result = model.predict(img_array)
+        score = result[0, 0]
         
         st.write("---")
-        
-       
-        if result[0, 0] <= 0.6:
+        ट
+        if score > 0.5:
             st.success("🎯 Result: Person is WITH Mask")
         else:
             st.error("🚨 Result: Person is WITHOUT Mask")
     else:
-        st.error("Please upload or capture an image first!")
+        st.error("Please upload or capture an image first and crop it!")
