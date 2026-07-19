@@ -65,7 +65,7 @@ if st.button("Detect"):
         score = result[0, 0]
         
         st.write("---")
-        ट
+        
         if score > 0.5:
             st.success("🎯 Result: Person is WITH Mask")
         else:
