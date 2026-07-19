@@ -1,0 +1,5 @@
+numpy== 1.26.4
+tensorflow== 2.21.0
+Pillow== 12.3.0
+pandas== 2.3.3
+streamlit-cropper== 1.59.2
